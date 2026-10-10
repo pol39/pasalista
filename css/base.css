@@ -4,12 +4,14 @@
   --acc: #1e88c8; --acc-tx: #fff; --bd: #d6e6ee;
   --ok: #2e9e5b; --ko: #d64545; --r: 16px;
   --sombra: 0 2px 10px rgba(18, 48, 63, .08);
+  --acc2: #17b3c4; --acc-soft: #dff0fa; --hd1: #1e88c8; --hd2: #3fb7d9;
   color-scheme: light;
 }
 :root[data-tema=oscuro] {
   --bg: #0d1b24; --card: #15293a; --tx: #e6f1f6; --tx2: #8fa9b8;
   --acc: #4db3ea; --acc-tx: #06202e; --bd: #25414f;
   --ok: #4cc27e; --ko: #ef6b6b; --sombra: none;
+  --acc2: #36d1dc; --acc-soft: #1d3b52; --hd1: #0f3552; --hd2: #14587a;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }

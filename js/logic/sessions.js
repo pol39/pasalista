@@ -2,19 +2,21 @@
 // Estado de una marca: 'presente' | 'ausente' | null (sin marcar: nunca se asume nada).
 import { grupoEn, diasEn } from './periods.js';
 import { diaSemana, mesDeFecha, hoyFecha } from '../utils/dates.js';
+import { porEdadYNombre } from '../utils/orden.js';
 
-const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, 'es');
+// Un festivo es festivo para TODOS los grupos (aunque se hubiera guardado con un grupo concreto).
+export const afectaATodos = e => e.grupoId == null || e.tipo === 'Festivo';
 
-// ¿Es día no lectivo para ese grupo? (grupoId null = afecta a todos los grupos)
+// ¿Es día no lectivo para ese grupo?
 export const especialEn = (fecha, grupoId, especiales) =>
-  especiales.find(e => e.fecha === fecha && (e.grupoId == null || e.grupoId === grupoId)) || null;
+  especiales.find(e => e.fecha === fecha && (afectaATodos(e) || e.grupoId === grupoId)) || null;
 
 // Quién debe venir ese día: activos ese mes, en ese grupo y con ese día de la semana,
 // más los participantes extra añadidos a la sesión (recuperaciones).
 export function listaDelDia(fecha, grupo, parts, grupos, sesion) {
   const mes = mesDeFecha(fecha), dia = diaSemana(fecha), extra = sesion?.extras || [];
-  const normales = parts.filter(p => grupoEn(p, mes) === grupo.id && diasEn(p, mes, grupos).includes(dia)).sort(porNombre);
-  const extras = parts.filter(p => extra.includes(p.id) && !normales.includes(p)).sort(porNombre);
+  const normales = parts.filter(p => grupoEn(p, mes) === grupo.id && diasEn(p, mes, grupos).includes(dia)).sort(porEdadYNombre);
+  const extras = parts.filter(p => extra.includes(p.id) && !normales.includes(p)).sort(porEdadYNombre);
   return [...normales, ...extras];
 }
 

@@ -2,12 +2,13 @@
 <meta charset="utf-8">
 <title>Pruebas de PasaLista</title>
 <body style="font:16px system-ui;padding:1rem">
-<h1>Pruebas de PasaLista (Fases 1 y 2)</h1>
+<h1>Pruebas de PasaLista</h1>
 <p>Todo debe salir en verde (✓). Abre esta página con el servidor local (ver instrucciones).</p>
 <ul id="r"></ul>
 <script type="module">
 import { estaActivo, grupoEn, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo, diasGrupo } from '../js/logic/periods.js';
 import { especialEn, listaDelDia, estadoDia, porcentaje } from '../js/logic/sessions.js';
+import { porEdadYNombre } from '../js/utils/orden.js';
 const ul = document.getElementById('r');
 const prueba = (nombre, f) => {
   let ok = false, msg = '';
@@ -65,5 +66,16 @@ prueba('Días sin lista pasada no cuentan: sin ninguna marca no hay porcentaje',
 prueba('Cambio de días del grupo desde enero: los meses anteriores conservan los antiguos', () => {
   const g = { dias: [1, 2, 3], diasHist: [{ desde: '0000-00', dias: [2, 4] }, { desde: '2026-01', dias: [1, 2, 3] }] };
   return diasGrupo(g, '2025-12').join() === '2,4' && diasGrupo(g, '2026-02').join() === '1,2,3';
+});
+
+// ---- Mejoras: festivos y orden ----
+prueba('Un festivo es festivo para TODOS los grupos, aunque se guardara con un grupo', () => {
+  const f = [{ fecha: '2025-11-07', grupoId: 'A', tipo: 'Festivo' }];
+  return !!especialEn('2025-11-07', 'A', f) && !!especialEn('2025-11-07', 'B', f);
+});
+prueba('Orden: primero por edad (menor a mayor), luego alfabético; sin año de nacimiento al final', () => {
+  const l = [{ id: 'a', nombre: 'Zoe', anyNacimiento: 2018 }, { id: 'b', nombre: 'Ana', anyNacimiento: 2016 },
+             { id: 'c', nombre: 'Ada', anyNacimiento: 2018 }, { id: 'd', nombre: 'Aaron', anyNacimiento: null }];
+  return l.sort(porEdadYNombre).map(x => x.id).join() === 'c,a,b,d';
 });
 </script>

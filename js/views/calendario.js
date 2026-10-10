@@ -1,7 +1,8 @@
 // Calendario mensual (móvil y ordenador) y, solo en ordenador, la tabla mensual de asistencia.
 import { todos, leer } from '../storage.js';
 import { estado } from '../state.js';
-import { h } from '../utils/dom.js';
+import { h, chipEdad } from '../utils/dom.js';
+import { porEdadYNombre } from '../utils/orden.js';
 import { nombreMes, mesAnterior, mesSiguiente, diasDelMes, diaSemana, hoyFecha } from '../utils/dates.js';
 import { estaActivo, grupoEn, diasGrupo } from '../logic/periods.js';
 import { especialEn, estadoDia, listaDelDia, porcentaje } from '../logic/sessions.js';
@@ -45,7 +46,7 @@ export async function vista(main) {
     const noLectivo = new Set(cols.filter(f => especialEn(f, grupo.id, especiales)));
     const extrasMes = new Set(sesiones.filter(s => s.grupoId === grupo.id && s.fecha.startsWith(mes)).flatMap(s => s.extras || []));
     const filas = parts.filter(p => (estaActivo(p, mes) && grupoEn(p, mes) === grupo.id) || extrasMes.has(p.id))
-      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+      .sort(porEdadYNombre);
 
     const clic = (p, f) => {
       ponerAsistencia(reg, p.id, f, { estado: siguiente(reg.get(`${p.id}|${f}`)?.estado), justificada: false, retraso: false }).catch(e => alert(e.message));
@@ -65,7 +66,7 @@ export async function vista(main) {
       h('thead', {}, h('tr', {}, h('th', {}, t('Participante')),
         ...cols.map(f => h('th', { class: noLectivo.has(f) ? 'nl' : '' }, h('div', {}, LETRAS[diaSemana(f) - 1]), h('div', {}, String(+f.slice(8))), noLectivo.has(f) ? '🚫' : null)),
         h('th', {}, '%'))),
-      h('tbody', {}, ...filas.map(p => h('tr', {}, h('td', {}, p.nombre), ...cols.map(f => celda(p, f)), h('td', { class: 'pct' }, pct(p))))));
+      h('tbody', {}, ...filas.map(p => h('tr', {}, h('td', {}, chipEdad(p.anyNacimiento), ' ', p.nombre), ...cols.map(f => celda(p, f)), h('td', { class: 'pct' }, pct(p))))));
     const wrap = h('div', { class: 'tabla-wrap' }, filas.length && cols.length ? tabla() : h('p', { class: 'vacio' }, t('No hay participantes o días de entreno este mes.')));
 
     main.replaceChildren(

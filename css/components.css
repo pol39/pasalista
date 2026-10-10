@@ -65,3 +65,94 @@ td.na { color: var(--tx2); }
 .celda.ausente { background: var(--ko); color: #fff; }
 .pct { font-weight: 700; }
 @media (min-width: 900px) { .tabla-wrap, .solo-tabla { display: block; } }
+
+/* ================= Estilo v2: más color y movimiento con sentido ================= */
+:root { --ease: cubic-bezier(.2, .8, .3, 1); }
+body { background: var(--bg) radial-gradient(900px 300px at 50% -80px, var(--acc-soft), transparent) no-repeat; }
+h2 { letter-spacing: -.01em; }
+
+/* Cabecera con ola animada */
+header { background: linear-gradient(135deg, var(--hd1), var(--hd2)); color: #fff; border: 0; position: relative; overflow: hidden; padding-bottom: 20px; }
+header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 14px; opacity: .3; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 14'%3E%3Cpath d='M0 7Q15 0 30 7T60 7V14H0Z' fill='%23fff'/%3E%3C/svg%3E") repeat-x; background-size: 60px 14px; animation: ola 7s linear infinite; }
+header .btn { background: rgba(255, 255, 255, .18); border-color: rgba(255, 255, 255, .35); color: #fff; min-width: 44px; transition: transform .45s var(--ease); }
+#tema.giro { transform: rotate(180deg); }
+@keyframes ola { to { background-position-x: 60px; } }
+
+/* Navegación */
+nav { background: color-mix(in srgb, var(--card) 90%, transparent); backdrop-filter: blur(8px); }
+nav a { transition: color .2s, background .2s; }
+nav a .ico { border-radius: 99px; padding: 0 16px; transition: background .25s; }
+nav a.activa .ico { background: var(--acc-soft); animation: rebote .45s var(--ease); }
+@keyframes rebote { 40% { transform: translateY(-5px) scale(1.15); } }
+@media (min-width: 900px) {
+  nav a .ico { padding: 0; }
+  nav a.activa .ico { background: none; }
+  nav a:hover { background: var(--acc-soft); }
+}
+
+/* Botones, tarjetas y formularios */
+.btn { transition: transform .12s var(--ease), box-shadow .2s, background .2s, border-color .2s, color .2s; }
+.btn:active { transform: scale(.95); }
+.btn.primario { background: linear-gradient(135deg, var(--acc), var(--acc2)); border-color: transparent; box-shadow: 0 4px 12px color-mix(in srgb, var(--acc) 35%, transparent); }
+.card { transition: transform .2s var(--ease), box-shadow .2s, background .25s, border-color .25s; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--acc) 55%, transparent); outline-offset: 2px; }
+input:focus, select:focus, textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--acc-soft); outline: none; }
+@media (hover: hover) {
+  .btn:hover { box-shadow: 0 3px 10px rgba(18, 48, 63, .15); transform: translateY(-1px); }
+  .btn:active { transform: scale(.95); }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(18, 48, 63, .12); }
+  .dia:hover { transform: scale(1.08); }
+}
+
+/* Edades: cada edad con su color (el matiz --h lo pone el código) */
+.edad { display: inline-block; min-width: 2em; padding: 1px 8px; border-radius: 99px; font-size: .8rem; font-weight: 700; text-align: center; background: hsl(var(--h) 85% 90%); color: hsl(var(--h) 65% 26%); }
+:root[data-tema=oscuro] .edad { background: hsl(var(--h) 45% 24%); color: hsl(var(--h) 90% 82%); }
+.fila > .edad { flex: none; font-size: .95rem; }
+.card.conedad { border-left: 5px solid hsl(var(--h) 70% 55%); }
+
+/* Pasar lista: el color de la fila refleja el estado y la fila "rebota" al marcarla */
+.asis { border-left: 5px solid transparent; }
+.asis.s-presente { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok) 9%, var(--card)); }
+.asis.s-ausente { border-left-color: var(--ko); background: color-mix(in srgb, var(--ko) 9%, var(--card)); }
+.asis.pop { animation: pop .35s var(--ease); }
+.asis.pop .btn.on { animation: tic .4s var(--ease); }
+@keyframes pop { 40% { transform: scale(1.025); } }
+@keyframes tic { 0% { transform: scale(.85); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+/* Barra de progreso, lista completa y burbujas */
+.contador { position: relative; }
+.barra > div { position: relative; background: linear-gradient(90deg, var(--acc2), var(--ok)); transition: width .45s var(--ease); }
+.barra > div.lleno::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); background-size: 200% 100%; animation: brillo 1.6s ease-in-out 2; }
+@keyframes brillo { from { background-position: 200% 0; } to { background-position: -100% 0; } }
+.fin { font-weight: 700; color: var(--ok); text-align: center; margin: -4px 0 10px; }
+.fin:not(:empty), .guardado:not(:empty) { animation: aparece .35s var(--ease); }
+@keyframes aparece { from { opacity: 0; transform: scale(.7); } }
+.burbuja { position: absolute; bottom: 8px; border-radius: 50%; border: 2px solid var(--acc); background: rgba(255, 255, 255, .5); pointer-events: none; animation: burbuja 1.4s ease-out forwards; }
+@keyframes burbuja { from { transform: translateY(0) scale(.5); opacity: 1; } to { transform: translateY(-70px) scale(1.2); opacity: 0; } }
+
+/* Vacíos, calendario y tabla */
+.vacio::before { content: "🫧"; display: block; font-size: 2.2rem; margin-bottom: 6px; animation: flota 3.5s ease-in-out infinite; }
+@keyframes flota { 50% { transform: translateY(-6px); } }
+.dia { transition: transform .15s var(--ease), box-shadow .2s; }
+.dia:active { transform: scale(.92); }
+.hoy { animation: latido 2s ease-out infinite; }
+@keyframes latido { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acc) 60%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+tbody tr:hover td:not(.nl) { background: var(--acc-soft); }
+.celda { transition: background .15s, transform .12s var(--ease); }
+.celda:active { transform: scale(.85); }
+.celda:hover:not(.presente):not(.ausente) { background: var(--acc-soft); }
+
+/* Ventanas */
+dialog.modal[open] { animation: dialogo .25s var(--ease); }
+dialog.modal[open]::backdrop { animation: fondo .25s ease both; backdrop-filter: blur(3px); }
+@keyframes dialogo { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+@keyframes fondo { from { opacity: 0; } }
+
+/* Entrada de cada pantalla (solo al cambiar de pantalla: el código activa data-nav un instante) */
+body[data-nav] main :is(.cab, .barra-mes, .segm, .filtros, .card, .dia, .vacio, .solo-tabla) { animation: subir .38s var(--ease) both; animation-delay: calc(min(var(--i, 0), 14) * 32ms); }
+@keyframes subir { from { opacity: 0; transform: translateY(12px); } }
+
+/* Respeto a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

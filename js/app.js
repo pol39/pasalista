@@ -13,7 +13,7 @@ import * as temporadas from './views/temporadas.js';
 import * as ajustes from './views/ajustes.js';
 
 aplicarTema();
-document.getElementById('tema').onclick = alternarTema;
+document.getElementById('tema').onclick = e => { alternarTema(); e.currentTarget.classList.toggle('giro'); };
 
 // El orden de aquí es el orden del menú.
 registrar('hoy', { icono: '✅', titulo: 'Hoy', vista: hoy.vista });

@@ -1,5 +1,7 @@
 // Ayudas para crear HTML sin plantillas de texto (así no hay problemas con comillas ni nombres raros).
 import { t } from '../i18n.js';
+import { edad } from './dates.js';
+import { matizEdad } from './orden.js';
 
 // h('div', { class: 'card' }, 'texto', otroElemento)  →  <div class="card">texto…</div>
 export const h = (etiqueta, attrs = {}, ...hijos) => {
@@ -67,4 +69,20 @@ export function pedir({ titulo, campos, valores = {}, acciones = [], ayuda }) {
     document.body.append(dlg);
     dlg.showModal();
   });
+}
+
+// Etiqueta con la edad, de un color distinto para cada edad (ver .edad en components.css).
+export function chipEdad(anyNac, largo = false) {
+  const e = edad(anyNac), matiz = matizEdad(anyNac);
+  return e == null ? null : h('span', { class: 'edad', style: `--h:${matiz}`, title: `${t('Nacido en')} ${anyNac}` }, largo ? `${e} ${t('años')}` : String(e));
+}
+
+// Burbujas que suben al completar la lista (decorativo; desaparecen solas).
+export function burbujas(contenedor) {
+  const bs = Array.from({ length: 10 }, () => {
+    const d = 8 + Math.random() * 14;
+    return h('span', { class: 'burbuja', style: `left:${5 + Math.random() * 90}%;width:${d}px;height:${d}px;animation-delay:${Math.random() * 300}ms` });
+  });
+  contenedor.append(...bs);
+  setTimeout(() => bs.forEach(b => b.remove()), 2000);
 }

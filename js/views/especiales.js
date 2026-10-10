@@ -3,6 +3,7 @@
 import { todos, guardar, borrar } from '../storage.js';
 import { h, pedir } from '../utils/dom.js';
 import { sumarDias, fechaCorta, hoyFecha } from '../utils/dates.js';
+import { afectaATodos } from '../logic/sessions.js';
 import { t } from '../i18n.js';
 
 const TIPOS = ['Festivo', 'Alerta de temporal', 'Huelga', 'Competición', 'Mantenimiento de la piscina', 'Otro'];
@@ -11,22 +12,23 @@ const TIPOS = ['Festivo', 'Alerta de temporal', 'Huelga', 'Competición', 'Mante
 export async function crearEspeciales(grupos, valores = {}) {
   const r = await pedir({
     titulo: 'Día no lectivo',
-    ayuda: 'No cuenta en ningún porcentaje. Para un bloque (Navidad, Semana Santa) rellena también «Hasta».',
+    ayuda: 'No cuenta en ningún porcentaje. Para un bloque (Navidad, Semana Santa) rellena también «Hasta». Un festivo afecta siempre a todos los grupos.',
     campos: [
       { n: 'desde', et: 'Desde', tipo: 'date', req: true },
       { n: 'hasta', et: 'Hasta (opcional)', tipo: 'date' },
-      { n: 'tipo', et: 'Motivo', tipo: 'select', opciones: TIPOS.map(x => ({ v: x, t: x })) },
+      { n: 'tipo', et: 'Motivo', tipo: 'select', opciones: TIPOS.map(x => ({ v: x, t: x })), cambia: (v, poner) => { if (v === 'Festivo') poner.grupoId(''); } },
       { n: 'motivo', et: 'Detalle (opcional)', ph: 'Navidad' },
       { n: 'grupoId', et: 'Afecta a', tipo: 'select', opciones: [{ v: '', t: 'Todos los grupos' }, ...grupos.map(g => ({ v: g.id, t: g.nombre }))] }
     ],
     valores: { desde: hoyFecha(), tipo: TIPOS[0], ...valores }
   });
   if (!r) return false;
+  const grupoId = r.tipo === 'Festivo' ? null : (r.grupoId || null); // festivo = todos los grupos
   const fin = r.hasta || r.desde;
   if (fin < r.desde) { alert(t('La fecha final es anterior a la inicial.')); return false; }
   const regs = [];
   for (let f = r.desde; f <= fin && regs.length < 366; f = sumarDias(f, 1)) {
-    regs.push({ id: `${f}|${r.grupoId || 'todos'}`, fecha: f, grupoId: r.grupoId || null, tipo: r.tipo, motivo: r.motivo });
+    regs.push({ id: `${f}|${grupoId || 'todos'}`, fecha: f, grupoId, tipo: r.tipo, motivo: r.motivo });
   }
   await Promise.all(regs.map(x => guardar('diasEspeciales', x)));
   return true;
@@ -58,7 +60,7 @@ export async function vista(main) {
         h('div', { class: 'grow' },
           h('strong', {}, fechaCorta(b.desde) + (b.hasta !== b.desde ? ' – ' + fechaCorta(b.hasta) : '')),
           h('div', {}, b.e.tipo + (b.e.motivo ? ': ' + b.e.motivo : '')),
-          h('div', { class: 'sec' }, b.e.grupoId ? (grupos.find(g => g.id === b.e.grupoId)?.nombre ?? '—') : t('Todos los grupos'))),
+          h('div', { class: 'sec' }, afectaATodos(b.e) ? t('Todos los grupos') : (grupos.find(g => g.id === b.e.grupoId)?.nombre ?? '—'))),
         h('button', { class: 'btn', onclick: () => deshacer(b) }, '↩ ' + t('Deshacer'))))
         : [h('p', { class: 'vacio' }, t('No hay días especiales. Añade un festivo o un bloque de fechas.'))]));
   };

@@ -1,16 +1,17 @@
 // Pantalla "Pasar lista": un toque por persona. Lo secundario queda tras el botón ⋯.
 import { todos, guardar, borrar } from '../storage.js';
 import { estado } from '../state.js';
-import { h, pedir } from '../utils/dom.js';
+import { h, pedir, chipEdad, burbujas } from '../utils/dom.js';
+import { porEdadYNombre } from '../utils/orden.js';
 import { sumarDias, hoyFecha, fechaLarga, mesDeFecha, diaSemana } from '../utils/dates.js';
 import { estaActivo, grupoEn, diasGrupo } from '../logic/periods.js';
-import { especialEn, listaDelDia } from '../logic/sessions.js';
+import { especialEn, listaDelDia, afectaATodos } from '../logic/sessions.js';
 import { ponerAsistencia } from '../asistencia.js';
 import { crearEspeciales } from './especiales.js';
 import { t } from '../i18n.js';
 
 export async function vista(main) {
-  let tm, tc; // temporizadores: aviso "Guardado" y guardado del comentario general
+  let tm, tc, ultimo = null; // temporizadores (aviso "Guardado" y comentario) y última persona marcada (para animarla)
 
   const abrir = async () => {
     const [grupos, parts, especiales, sesiones, asist] =
@@ -44,10 +45,10 @@ export async function vista(main) {
       return main.replaceChildren(...cabecera, h('div', { class: 'card banner' },
         h('strong', {}, '🚫 ' + t('Día no lectivo')),
         h('div', {}, especial.tipo + (especial.motivo ? ': ' + especial.motivo : '')),
-        h('div', { class: 'sec' }, especial.grupoId ? grupo.nombre : t('Todos los grupos')),
+        h('div', { class: 'sec' }, afectaATodos(especial) ? t('Todos los grupos') : grupo.nombre),
         h('p', { class: 'sec' }, t('No cuenta en ningún porcentaje.')),
         h('button', { class: 'btn', onclick: async () => {
-          if (!confirm(especial.grupoId ? t('¿Deshacer el día no lectivo?') : t('Este día es no lectivo para todos los grupos. ¿Deshacerlo para todos?'))) return;
+          if (!confirm(afectaATodos(especial) ? t('Este día es no lectivo para todos los grupos. ¿Deshacerlo para todos?') : t('¿Deshacer el día no lectivo?'))) return;
           await borrar('diasEspeciales', especial.id); abrir();
         } }, '↩ ' + t('Deshacer'))));
     }
@@ -58,7 +59,7 @@ export async function vista(main) {
     const fallo = e => alert(t('No se pudo guardar: ') + e.message);
     const poner = (p, cambios, sinPintar) => { ponerAsistencia(reg, p.id, fecha, cambios).then(avisar, fallo); if (!sinPintar) pintar(); };
     const guardarSesion = () => ((sesion.comentario || sesion.extras.length) ? guardar('sesiones', sesion) : borrar('sesiones', sesion.id)).then(avisar, fallo);
-    const marcar = (p, est) => poner(p, { estado: reg.get(clave(p))?.estado === est ? null : est, justificada: false, retraso: false });
+    const marcar = (p, est) => { ultimo = p.id; poner(p, { estado: reg.get(clave(p))?.estado === est ? null : est, justificada: false, retraso: false }); };
 
     // ---- Opciones secundarias (⋯) ----
     const opciones = async p => {
@@ -84,32 +85,41 @@ export async function vista(main) {
     const fila = p => {
       const r = reg.get(clave(p)), est = r?.estado;
       const notas = [r?.comentario ? '💬' : '', r?.justificada ? t('Justificada') : '', r?.retraso ? '⏱ ' + t('Retraso') : ''].filter(Boolean).join(' · ');
-      return h('div', { class: 'card asis' },
+      return h('div', { class: 'card asis' + (est ? ' s-' + est : '') + (ultimo === p.id ? ' pop' : '') },
         h('div', { class: 'fila' },
-          h('div', { class: 'grow' }, h('strong', {}, p.nombre), ' ', sesion.extras.includes(p.id) ? h('span', { class: 'chip' }, t('Extra')) : null,
+          h('div', { class: 'grow' }, chipEdad(p.anyNacimiento), ' ', h('strong', {}, p.nombre), ' ', sesion.extras.includes(p.id) ? h('span', { class: 'chip' }, t('Extra')) : null,
             notas ? h('div', { class: 'sec' }, notas) : null),
           h('button', { class: 'btn mini', 'aria-label': t('Más opciones'), onclick: () => opciones(p) }, '⋯')),
         h('div', { class: 'dos' },
           h('button', { class: 'btn grande ok' + (est === 'presente' ? ' on' : ''), 'aria-pressed': String(est === 'presente'), onclick: () => marcar(p, 'presente') }, '✓ ' + t('Ha venido')),
           h('button', { class: 'btn grande ko' + (est === 'ausente' ? ' on' : ''), 'aria-pressed': String(est === 'ausente'), onclick: () => marcar(p, 'ausente') }, '✗ ' + t('No ha venido'))));
     };
-    const contador = h('div', {}), listaEl = h('div', {});
+    // El contador se crea una vez y solo se actualiza (así la barra se mueve con suavidad).
+    const texto = h('strong', { class: 'grow' }), relleno = h('div'), fin = h('div', { class: 'fin' });
+    const contador = h('div', { class: 'contador' }, h('div', { class: 'fila' }, texto, ind), h('div', { class: 'barra' }, relleno), fin);
+    const listaEl = h('div', {});
+    let completa; // ¿estaba ya completa la lista? (las burbujas salen solo al completarla)
     const pintar = () => {
       const l = calc();
       const marcados = l.filter(p => reg.get(clave(p))?.estado);
       const pres = marcados.filter(p => reg.get(clave(p)).estado === 'presente').length;
-      contador.replaceChildren(
-        h('div', { class: 'fila' }, h('strong', { class: 'grow' }, `${marcados.length} ${t('de')} ${l.length} ${t('marcados')} · ${pres} ${t('presentes')} · ${marcados.length - pres} ${t('ausentes')}`), ind),
-        h('div', { class: 'barra' }, h('div', { style: `width:${l.length ? 100 * marcados.length / l.length : 0}%` })));
+      texto.textContent = `${marcados.length} ${t('de')} ${l.length} ${t('marcados')} · ${pres} ${t('presentes')} · ${marcados.length - pres} ${t('ausentes')}`;
+      relleno.style.width = `${l.length ? 100 * marcados.length / l.length : 0}%`;
+      const lleno = l.length > 0 && marcados.length === l.length;
+      relleno.classList.toggle('lleno', lleno);
+      fin.textContent = lleno ? '🎉 ' + t('¡Lista completa!') : '';
+      if (lleno && completa === false) burbujas(contador);
+      completa = lleno;
       listaEl.replaceChildren(...(l.length ? l.map(fila) : [h('p', { class: 'vacio' },
         diasGrupo(grupo, mes).includes(diaSemana(fecha)) ? t('No hay participantes activos este día.') : t('Este grupo no entrena este día. Puedes añadir participantes extra.'))]));
+      ultimo = null;
     };
 
     // ---- Acciones generales ----
     const todosPresentes = () => { calc().filter(p => !reg.get(clave(p))?.estado).forEach(p => poner(p, { estado: 'presente' }, true)); pintar(); };
     const añadir = async () => {
       const enLista = new Set(calc().map(p => p.id));
-      const cands = parts.filter(p => estaActivo(p, mes) && !enLista.has(p.id)).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+      const cands = parts.filter(p => estaActivo(p, mes) && !enLista.has(p.id)).sort(porEdadYNombre);
       if (!cands.length) return alert(t('No hay más participantes activos que añadir.'));
       const r = await pedir({
         titulo: 'Añadir a esta sesión', ayuda: 'Para una recuperación o un invitado que ya esté dado de alta.',
@@ -131,7 +141,7 @@ export async function vista(main) {
       listaEl,
       h('div', { class: 'fila acc' },
         h('button', { class: 'btn', onclick: añadir }, '+ ' + t('Añadir a esta sesión')),
-        h('button', { class: 'btn', onclick: async () => { if (await crearEspeciales(grupos, { desde: fecha, grupoId: grupo.id })) abrir(); } }, '🚫 ' + t('Marcar día no lectivo'))),
+        h('button', { class: 'btn', onclick: async () => { if (await crearEspeciales(grupos, { desde: fecha })) abrir(); } }, '🚫 ' + t('Marcar día no lectivo'))),
       coment);
     pintar();
   };

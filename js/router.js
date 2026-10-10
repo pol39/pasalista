@@ -6,6 +6,7 @@ import { h } from './utils/dom.js';
 import { t } from './i18n.js';
 
 const rutas = {};
+let quitar; // temporizador que apaga la animación de entrada
 export const registrar = (id, ruta) => { rutas[id] = ruta; };
 
 export function iniciar(main, nav) {
@@ -18,8 +19,14 @@ export function iniciar(main, nav) {
     const actual = rutas[id] ? id : 'hoy';
     nav.querySelectorAll('a').forEach(a =>
       a.classList.toggle('activa', a.dataset.id === actual || (rutas[actual].secundaria && a.dataset.id === 'mas')));
+    // data-nav activa durante un momento la animación de entrada (solo al cambiar de pantalla).
+    document.body.dataset.nav = '1';
     main.replaceChildren();
+    scrollTo(0, 0);
     await rutas[actual].vista(main);
+    main.querySelectorAll('.cab, .barra-mes, .segm, .filtros, .card, .dia, .vacio, .solo-tabla').forEach((e, i) => e.style.setProperty('--i', i));
+    clearTimeout(quitar);
+    quitar = setTimeout(() => { delete document.body.dataset.nav; }, 900);
   };
   addEventListener('hashchange', ir);
   ir();

@@ -2,7 +2,8 @@
 // La lista muestra a quien está activo en el mes que se está mirando (flechas ‹ ›).
 import { todos, guardar, nuevoId } from '../storage.js';
 import { estado } from '../state.js';
-import { h, pedir } from '../utils/dom.js';
+import { h, pedir, chipEdad } from '../utils/dom.js';
+import { porEdadYNombre, matizEdad } from '../utils/orden.js';
 import { nombreMes, mesAnterior, mesSiguiente, edad } from '../utils/dates.js';
 import { estaActivo, grupoEn, periodoEn, diasEn, diasGrupo, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo } from '../logic/periods.js';
 import { t } from '../i18n.js';
@@ -66,9 +67,11 @@ export async function vista(main) {
     const fila = p => {
       const per = periodoEn(p, mes);
       const detalle = per
-        ? [p.anyNacimiento ? `${edad(p.anyNacimiento)} ${t('años')}` : '', nombreGrupo(per.grupoId), diasEn(p, mes, grupos).map(d => NOMBRES_DIA[d - 1]).join(' ')].filter(Boolean).join(' · ')
+        ? [nombreGrupo(per.grupoId), diasEn(p, mes, grupos).map(d => NOMBRES_DIA[d - 1]).join(' ')].filter(Boolean).join(' · ')
         : t('De baja o aún no incorporado en este mes');
-      return h('div', { class: 'card fila' },
+      const matiz = matizEdad(p.anyNacimiento);
+      return h('div', { class: 'card fila' + (per && matiz != null ? ' conedad' : ''), style: matiz != null ? `--h:${matiz}` : null },
+        per ? chipEdad(p.anyNacimiento, true) : null,
         h('div', { class: 'grow' }, h('strong', {}, p.nombre), h('div', { class: 'sec' }, detalle)),
         per ? h('button', { class: 'btn', 'aria-label': t('Editar'), onclick: () => editar(p) }, '✏️')
             : h('button', { class: 'btn', onclick: () => volver(p) }, t('Reactivar')));
@@ -79,7 +82,7 @@ export async function vista(main) {
         .filter(p => estaActivo(p, mes) !== filtro.bajas)
         .filter(p => !q || p.nombre.toLowerCase().includes(q))
         .filter(p => filtro.bajas || !filtro.grupo || grupoEn(p, mes) === filtro.grupo)
-        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+        .sort(porEdadYNombre); // primero por edad y luego alfabético
       if (visibles.length) return visibles.map(fila);
       return [h('p', { class: 'vacio' }, filtro.bajas ? t('Nadie de baja en este mes.')
         : parts.length ? t('Nadie coincide con el filtro en este mes.') : t('Aún no hay participantes. Pulsa «Añadir».'))];
