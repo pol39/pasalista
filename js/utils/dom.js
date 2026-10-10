@@ -49,7 +49,7 @@ export function pedir({ titulo, campos, valores = {}, acciones = [], ayuda }) {
           pattern: c.req && !area ? '.*\\S.*' : null // impide nombres vacíos con solo espacios
         });
         el.value = valores[c.n] ?? '';
-        leer[c.n] = () => c.tipo === 'number' ? (el.value === '' ? null : +el.value) : el.value.trim();
+        leer[c.n] = () => c.tipo === 'number' ? (el.value === '' ? null : +el.value) : c.tipo === 'password' ? el.value : el.value.trim();
       }
       return c.tipo === 'check'
         ? h('label', { class: 'campo chk' }, el, t(c.et))

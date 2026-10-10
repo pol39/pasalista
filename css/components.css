@@ -156,3 +156,16 @@ body[data-nav] main :is(.cab, .barra-mes, .segm, .filtros, .card, .dia, .vacio, 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---- Cuenta y sincronización ---- */
+[hidden] { display: none !important; }
+.acciones-cab { display: flex; gap: 8px; }
+.nube { position: relative; }
+.nube.local { opacity: .8; }
+.nube.ok::after { content: ""; position: absolute; right: 5px; bottom: 5px; width: 9px; height: 9px; border-radius: 50%; background: #4cc27e; border: 2px solid #fff; }
+.nube.sincronizando { animation: pulso 1s ease-in-out infinite; }
+@keyframes pulso { 50% { transform: scale(.88); opacity: .7; } }
+.cuenta-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.msg { min-height: 1.3em; font-size: .9rem; margin: 0 0 8px; }
+.msg.err { color: var(--ko); }
+.msg.ok { color: var(--ok); }

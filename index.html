@@ -22,10 +22,14 @@
 <body>
   <header>
     <h1>🏊 PasaLista</h1>
-    <button id="tema" class="btn" aria-label="Cambiar tema claro/oscuro">🌓</button>
+    <div class="acciones-cab">
+      <button id="nube" class="btn nube" aria-label="Cuenta y sincronización" hidden>☁️</button>
+      <button id="tema" class="btn" aria-label="Cambiar tema claro/oscuro">🌓</button>
+    </div>
   </header>
   <main id="main"></main>
   <nav id="nav" aria-label="Navegación principal"></nav>
+  <script src="js/vendor/supabase.js"></script> <!-- librería de Supabase (copia local, sin CDN) -->
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

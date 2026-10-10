@@ -4,6 +4,8 @@
 // soloMovil: solo aparece en la barra inferior del móvil.
 import { h } from './utils/dom.js';
 import { t } from './i18n.js';
+import { eventos } from './sync.js';
+import { cargarEstado } from './state.js';
 
 const rutas = {};
 let quitar; // temporizador que apaga la animación de entrada
@@ -29,5 +31,21 @@ export function iniciar(main, nav) {
     quitar = setTimeout(() => { delete document.body.dataset.nav; }, 900);
   };
   addEventListener('hashchange', ir);
+
+  // Llegaron cambios de otro dispositivo: se vuelve a pintar la pantalla actual,
+  // pero sin interrumpir si estás escribiendo o hay una ventana abierta.
+  let reintento;
+  const refrescar = async () => {
+    const a = document.activeElement;
+    const escribiendo = a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && ['text', 'search', 'number', 'email', 'password'].includes(a.type)));
+    if (document.querySelector('dialog[open]') || escribiendo) { clearTimeout(reintento); reintento = setTimeout(refrescar, 1500); return; }
+    await cargarEstado();
+    const id = location.hash.slice(2), actual = rutas[id] ? id : 'hoy';
+    if (actual === 'ajustes') return; // esa pantalla se actualiza sola
+    const y = scrollY;
+    await rutas[actual].vista(main);
+    scrollTo(0, y);
+  };
+  eventos.addEventListener('datos', refrescar);
   ir();
 }
