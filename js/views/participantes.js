@@ -4,7 +4,7 @@ import { todos, guardar, nuevoId } from '../storage.js';
 import { estado } from '../state.js';
 import { h, pedir } from '../utils/dom.js';
 import { nombreMes, mesAnterior, mesSiguiente, edad } from '../utils/dates.js';
-import { estaActivo, grupoEn, periodoEn, diasEn, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo } from '../logic/periods.js';
+import { estaActivo, grupoEn, periodoEn, diasEn, diasGrupo, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo } from '../logic/periods.js';
 import { t } from '../i18n.js';
 
 const NOMBRES_DIA = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
@@ -15,7 +15,7 @@ export async function vista(main) {
     const parts = await todos('participantes');
     const grupos = (await todos('grupos')).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
     const mes = estado.mes;
-    const diasDe = id => grupos.find(g => g.id === id)?.dias ?? [];
+    const diasDe = id => { const g = grupos.find(x => x.id === id); return g ? diasGrupo(g, mes) : []; };
     const nombreGrupo = id => grupos.find(g => g.id === id)?.nombre ?? '—';
 
     // ---- Acciones ----

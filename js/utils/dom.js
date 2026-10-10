@@ -17,7 +17,7 @@ export const h = (etiqueta, attrs = {}, ...hijos) => {
 const DIAS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do']; // 1 = lunes … 7 = domingo
 
 // Ventana con formulario. Devuelve un objeto con los valores, o null si se cancela.
-// campos: [{ n: nombre, et: etiqueta, tipo: text|number|date|month|textarea|select|dias, req, ph, opciones, cambia }]
+// campos: [{ n: nombre, et: etiqueta, tipo: text|number|date|month|textarea|select|dias|check, req, ph, opciones, cambia }]
 // acciones: botones extra, p. ej. [{ id: 'baja', t: 'Dar de baja' }] → devuelve { __accion: 'baja' }
 export function pedir({ titulo, campos, valores = {}, acciones = [], ayuda }) {
   return new Promise(resolve => {
@@ -30,6 +30,10 @@ export function pedir({ titulo, campos, valores = {}, acciones = [], ayuda }) {
         el.addEventListener('change', () => c.cambia?.(el.value, poner));
         leer[c.n] = () => el.value;
         poner[c.n] = v => { el.value = v; };
+      } else if (c.tipo === 'check') {
+        el = h('input', { type: 'checkbox' });
+        el.checked = !!valores[c.n];
+        leer[c.n] = () => el.checked;
       } else if (c.tipo === 'dias') {
         const cajas = DIAS.map((_, k) => h('input', { type: 'checkbox', value: k + 1 }));
         el = h('div', { class: 'dias' }, ...cajas.map((cb, k) => h('label', {}, cb, DIAS[k])));
@@ -45,7 +49,9 @@ export function pedir({ titulo, campos, valores = {}, acciones = [], ayuda }) {
         el.value = valores[c.n] ?? '';
         leer[c.n] = () => c.tipo === 'number' ? (el.value === '' ? null : +el.value) : el.value.trim();
       }
-      return h(c.tipo === 'dias' ? 'div' : 'label', { class: 'campo' }, h('span', {}, t(c.et)), el);
+      return c.tipo === 'check'
+        ? h('label', { class: 'campo chk' }, el, t(c.et))
+        : h(c.tipo === 'dias' ? 'div' : 'label', { class: 'campo' }, h('span', {}, t(c.et)), el);
     });
 
     const cierre = v => { dlg.close(); dlg.remove(); resolve(v); };

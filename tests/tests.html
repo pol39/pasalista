@@ -2,11 +2,12 @@
 <meta charset="utf-8">
 <title>Pruebas de PasaLista</title>
 <body style="font:16px system-ui;padding:1rem">
-<h1>Pruebas de altas, bajas y cambios de grupo</h1>
+<h1>Pruebas de PasaLista (Fases 1 y 2)</h1>
 <p>Todo debe salir en verde (✓). Abre esta página con el servidor local (ver instrucciones).</p>
 <ul id="r"></ul>
 <script type="module">
-import { estaActivo, grupoEn, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo } from '../js/logic/periods.js';
+import { estaActivo, grupoEn, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo, diasGrupo } from '../js/logic/periods.js';
+import { especialEn, listaDelDia, estadoDia, porcentaje } from '../js/logic/sessions.js';
 const ul = document.getElementById('r');
 const prueba = (nombre, f) => {
   let ok = false, msg = '';
@@ -34,5 +35,35 @@ prueba('Cambio de grupo en enero: A hasta diciembre, B desde enero', () => {
 prueba('Cambio de grupo, luego baja: el historial de grupos se mantiene', () => {
   const p = darDeBaja(cambiarGrupo(base(), '2026-01', 'B'), '2026-03');
   return grupoEn(p, '2025-11') === 'A' && grupoEn(p, '2026-02') === 'B' && !estaActivo(p, '2026-03');
+});
+
+// ---- Fase 2: listas, días no lectivos y porcentajes ----
+const gA = { id: 'A', nombre: 'Prebenjamines', dias: [2, 4, 5] }, gB = { id: 'B', nombre: 'Benjamines', dias: [1, 2, 3, 4, 5] };
+const grupos = [gA, gB];
+const p1 = nuevoParticipante({ id: 'p1', nombre: 'Marta', grupoId: 'A', mes: '2025-10' });
+const p2 = nuevoParticipante({ id: 'p2', nombre: 'Leo', grupoId: 'A', mes: '2025-12' });
+const ids = l => l.map(p => p.id).join();
+const esp = [{ fecha: '2025-11-04', grupoId: 'A', tipo: 'Huelga' }, { fecha: '2025-11-06', grupoId: null, tipo: 'Festivo' }];
+const regs = [{ estado: 'presente' }, { estado: 'presente' }, { estado: 'ausente' }, { estado: 'ausente', justificada: true }, undefined];
+
+prueba('Martes 4 nov: solo Marta (Leo aún no ha entrado); el miércoles el grupo no entrena', () =>
+  ids(listaDelDia('2025-11-04', gA, [p1, p2], grupos)) === 'p1' && listaDelDia('2025-11-05', gA, [p1, p2], grupos).length === 0);
+prueba('Martes 2 dic: Leo ya aparece desde su mes de alta', () => ids(listaDelDia('2025-12-02', gA, [p1, p2], grupos)) === 'p2,p1');
+prueba('Día no lectivo solo para el grupo A: afecta a A y no a B', () => !!especialEn('2025-11-04', 'A', esp) && !especialEn('2025-11-04', 'B', esp));
+prueba('Día no lectivo para todos: afecta a todos los grupos', () => !!especialEn('2025-11-06', 'A', esp) && !!especialEn('2025-11-06', 'B', esp));
+prueba('Entreno pasado sin marcar = pendiente; marcado = completo; no lectivo = no cuenta', () => {
+  const reg = new Map(), ctx = { parts: [p1], grupos, especiales: [], sesiones: [], reg };
+  const a = estadoDia('2025-11-04', gA, ctx).tipo;
+  reg.set('p1|2025-11-04', { estado: 'presente' });
+  const b = estadoDia('2025-11-04', gA, ctx).tipo;
+  const c = estadoDia('2025-11-04', gA, { ...ctx, especiales: esp }).tipo;
+  return a === 'pendiente' && b === 'completa' && c === 'nolectivo';
+});
+prueba('Justificado EXCLUYE: 2 presentes de 3 sesiones computables = 67 %', () => porcentaje(regs, 'excluye') === 67);
+prueba('Justificado CUENTA como asistencia: 3 de 4 = 75 %', () => porcentaje(regs, 'cuenta') === 75);
+prueba('Días sin lista pasada no cuentan: sin ninguna marca no hay porcentaje', () => porcentaje([undefined, { estado: null }], 'excluye') === null);
+prueba('Cambio de días del grupo desde enero: los meses anteriores conservan los antiguos', () => {
+  const g = { dias: [1, 2, 3], diasHist: [{ desde: '0000-00', dias: [2, 4] }, { desde: '2026-01', dias: [1, 2, 3] }] };
+  return diasGrupo(g, '2025-12').join() === '2,4' && diasGrupo(g, '2026-02').join() === '1,2,3';
 });
 </script>

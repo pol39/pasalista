@@ -12,10 +12,11 @@ nav {
 }
 nav a {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 58px; font-size: .75rem; color: var(--tx2); text-decoration: none;
+  min-height: 58px; min-width: 0; font-size: .68rem; text-align: center; color: var(--tx2); text-decoration: none;
 }
 nav a.activa { color: var(--acc); font-weight: 600; }
 .ico { font-size: 1.4rem; line-height: 1.2; }
+.solo-ordenador { display: none; } /* en el móvil se llega por «Más» */
 
 /* ORDENADOR: menú lateral a la izquierda. */
 @media (min-width: 900px) {
@@ -24,5 +25,7 @@ nav a.activa { color: var(--acc); font-weight: 600; }
   nav { grid-column: 1; grid-row: 2; flex-direction: column; position: static; border-top: 0; border-right: 1px solid var(--bd); padding: 12px; gap: 4px; align-content: start; }
   nav a { flex: none; flex-direction: row; justify-content: flex-start; gap: 10px; min-height: 0; padding: 10px 12px; border-radius: 12px; font-size: 1rem; }
   nav a.activa { background: var(--bg); }
+  nav a.solo-ordenador { display: flex; }
+  nav a.solo-movil { display: none; }
   main { grid-column: 2; grid-row: 2; align-self: start; }
 }

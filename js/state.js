@@ -1,8 +1,8 @@
-// Estado compartido entre pantallas: mes que se está mirando y temporada activa.
+// Estado compartido entre pantallas: mes y día que se están mirando, grupo elegido y temporada activa.
 import { leer, guardar } from './storage.js';
-import { hoyMes } from './utils/dates.js';
+import { hoyMes, hoyFecha } from './utils/dates.js';
 
-export const estado = { mes: hoyMes(), temporadaId: null };
+export const estado = { mes: hoyMes(), fecha: hoyFecha(), grupoId: null, temporadaId: null };
 
 export async function cargarEstado() {
   estado.temporadaId = (await leer('ajustes', 'temporadaActiva'))?.valor ?? null;

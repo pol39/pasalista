@@ -12,10 +12,17 @@ export const estaActivo = (p, mes) => !!periodoEn(p, mes);
 export const grupoEn = (p, mes) => periodoEn(p, mes)?.grupoId ?? null;
 
 // Días de la semana (1 = lunes … 7 = domingo) en que debe venir ese mes.
+// Días del grupo en un mes. Si el grupo tiene historial de cambios (diasHist), se usa el vigente ese mes.
+export function diasGrupo(g, mes) {
+  const x = (g.diasHist || []).filter(d => d.desde <= mes).at(-1);
+  return x ? x.dias : g.dias;
+}
+
 export function diasEn(p, mes, grupos) {
   const x = periodoEn(p, mes);
   if (!x) return [];
-  return x.dias || grupos.find(g => g.id === x.grupoId)?.dias || [];
+  const g = grupos.find(g => g.id === x.grupoId);
+  return x.dias || (g ? diasGrupo(g, mes) : []);
 }
 
 export const nuevoParticipante = ({ id, nombre, anyNacimiento, notas, grupoId, mes }, dias = null) => ({

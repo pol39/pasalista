@@ -19,3 +19,19 @@ export function nombreMes(mes) {
 
 // Edad aproximada a partir del año de nacimiento (vacío si no se indicó).
 export const edad = anyNac => (anyNac ? new Date().getFullYear() - anyNac : null);
+
+// ---- Fechas completas "AAAA-MM-DD" (Fase 2) ----
+const dosCifras = n => String(n).padStart(2, '0');
+const aFecha = f => { const [a, m, d] = f.split('-').map(Number); return new Date(a, m - 1, d); };
+const aTexto = d => `${formato(d)}-${dosCifras(d.getDate())}`;
+
+export const hoyFecha = () => aTexto(new Date());
+export const mesDeFecha = f => f.slice(0, 7);
+export function sumarDias(f, n) { const d = aFecha(f); d.setDate(d.getDate() + n); return aTexto(d); }
+export const diaSemana = f => aFecha(f).getDay() || 7; // 1 = lunes … 7 = domingo
+export const fechaLarga = f => aFecha(f).toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+export const fechaCorta = f => f.split('-').reverse().join('/'); // 2025-12-25 → 25/12/2025
+export function diasDelMes(mes) {
+  const [a, m] = mes.split('-').map(Number);
+  return Array.from({ length: new Date(a, m, 0).getDate() }, (_, i) => `${mes}-${dosCifras(i + 1)}`);
+}

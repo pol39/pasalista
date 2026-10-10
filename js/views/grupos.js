@@ -1,6 +1,8 @@
 // Grupos: nombre, días de entrenamiento por defecto y horario opcional.
 import { todos, guardar, borrar, nuevoId } from '../storage.js';
 import { h, pedir } from '../utils/dom.js';
+import { estado } from '../state.js';
+import { diasGrupo } from '../logic/periods.js';
 import { t } from '../i18n.js';
 
 const NOMBRES_DIA = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
@@ -24,7 +26,16 @@ export async function vista(main) {
         await borrar('grupos', g.id);
       } else {
         if (!r.dias.length) return alert(t('Elige al menos un día.'));
-        await guardar('grupos', { ...g, ...r, id: g?.id ?? nuevoId() });
+        const nuevo = { ...g, ...r, id: g?.id ?? nuevoId() };
+        if (g && r.dias.join() !== diasGrupo(g, estado.mes).join()) {
+          // Cambio de días: se guarda desde qué mes vale, para que los meses anteriores no cambien.
+          const c = await pedir({ titulo: 'Cambio de días', ayuda: 'Los meses anteriores conservan los días anteriores.',
+            campos: [{ n: 'mes', et: 'Aplicar desde el mes', tipo: 'month', req: true, ph: '2025-10' }], valores: { mes: estado.mes } });
+          if (!c) return;
+          const hist = g.diasHist?.length ? g.diasHist : [{ desde: '0000-00', dias: g.dias }];
+          nuevo.diasHist = [...hist.filter(x => x.desde < c.mes), { desde: c.mes, dias: r.dias }];
+        }
+        await guardar('grupos', nuevo);
       }
       pintar();
     };
