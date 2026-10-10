@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>PasaLista</title>
+  <meta name="theme-color" content="#1e88c8">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg">
+  <!-- Aplica el tema antes de pintar para evitar parpadeos (misma lógica que js/theme.js) -->
+  <script>
+    (function () {
+      var m = localStorage.getItem('pasalista-tema') || 'sistema';
+      var o = m === 'oscuro' || (m === 'sistema' && matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.dataset.tema = o ? 'oscuro' : 'claro';
+    })();
+  </script>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <header>
+    <h1>🏊 PasaLista</h1>
+    <button id="tema" class="btn" aria-label="Cambiar tema claro/oscuro">🌓</button>
+  </header>
+  <main id="main"></main>
+  <nav id="nav" aria-label="Navegación principal"></nav>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

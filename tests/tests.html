@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pruebas de PasaLista</title>
+<body style="font:16px system-ui;padding:1rem">
+<h1>Pruebas de altas, bajas y cambios de grupo</h1>
+<p>Todo debe salir en verde (✓). Abre esta página con el servidor local (ver instrucciones).</p>
+<ul id="r"></ul>
+<script type="module">
+import { estaActivo, grupoEn, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo } from '../js/logic/periods.js';
+const ul = document.getElementById('r');
+const prueba = (nombre, f) => {
+  let ok = false, msg = '';
+  try { ok = f() === true; } catch (e) { msg = ' — error: ' + e.message; }
+  ul.append(Object.assign(document.createElement('li'), { textContent: (ok ? '✓ ' : '✗ ') + nombre + msg, style: 'color:' + (ok ? 'green' : 'red') }));
+};
+const base = () => nuevoParticipante({ id: '1', nombre: 'Marta', anyNacimiento: 2016, notas: '', grupoId: 'A', mes: '2025-10' }, null);
+
+prueba('Entra en octubre: NO aparece en septiembre', () => !estaActivo(base(), '2025-09'));
+prueba('Entra en octubre: aparece en octubre y en los meses siguientes', () => estaActivo(base(), '2025-10') && estaActivo(base(), '2026-05'));
+prueba('Baja desde diciembre: sigue en noviembre y desaparece desde diciembre', () => {
+  const p = darDeBaja(base(), '2025-12');
+  return estaActivo(p, '2025-11') && !estaActivo(p, '2025-12') && !estaActivo(p, '2026-03');
+});
+prueba('Reactivar en enero: sigue sin estar en diciembre, vuelve en enero y conserva 2 períodos', () => {
+  const p = reactivar(darDeBaja(base(), '2025-12'), '2026-01', 'A');
+  return estaActivo(p, '2025-11') && !estaActivo(p, '2025-12') && estaActivo(p, '2026-01') && p.periodos.length === 2;
+});
+prueba('No se puede reactivar a alguien que ya está de alta', () => { try { reactivar(base(), '2026-01', 'A'); return false; } catch { return true; } });
+prueba('Baja en el mismo mes del alta: nunca aparece', () => !estaActivo(darDeBaja(base(), '2025-10'), '2025-10'));
+prueba('Cambio de grupo en enero: A hasta diciembre, B desde enero', () => {
+  const p = cambiarGrupo(base(), '2026-01', 'B');
+  return grupoEn(p, '2025-12') === 'A' && grupoEn(p, '2026-01') === 'B' && grupoEn(p, '2026-06') === 'B';
+});
+prueba('Cambio de grupo, luego baja: el historial de grupos se mantiene', () => {
+  const p = darDeBaja(cambiarGrupo(base(), '2026-01', 'B'), '2026-03');
+  return grupoEn(p, '2025-11') === 'A' && grupoEn(p, '2026-02') === 'B' && !estaActivo(p, '2026-03');
+});
+</script>

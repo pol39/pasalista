@@ -1,0 +1,14 @@
+{
+  "name": "PasaLista",
+  "short_name": "PasaLista",
+  "description": "Control de asistencia para entrenadores de natación",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f2f8fb",
+  "theme_color": "#1e88c8",
+  "lang": "es",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

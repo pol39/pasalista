@@ -1,0 +1,23 @@
+/* Piezas reutilizables: tarjetas, botones, formularios, ventanas. */
+.card { background: var(--card); border: 1px solid var(--bd); border-radius: var(--r); box-shadow: var(--sombra); padding: 14px; margin-bottom: 10px; }
+.fila { display: flex; align-items: center; gap: 10px; }
+.grow { flex: 1; min-width: 0; }
+.cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.btn { font: inherit; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--bd); background: var(--card); color: var(--tx); cursor: pointer; }
+.btn.primario { background: var(--acc); color: var(--acc-tx); border-color: var(--acc); font-weight: 600; }
+.btn.peligro { color: var(--ko); border-color: var(--ko); }
+.chip { background: var(--bg); color: var(--acc); border-radius: 99px; padding: 4px 10px; font-size: .85rem; font-weight: 600; }
+.vacio { text-align: center; color: var(--tx2); padding: 30px 10px; }
+.barra-mes { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; text-transform: capitalize; }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+.filtros input[type=search], .filtros select { flex: 1; min-width: 140px; }
+.chk { display: flex; align-items: center; gap: 6px; }
+input, select, textarea { font: inherit; color: var(--tx); background: var(--card); border: 1px solid var(--bd); border-radius: 12px; padding: 10px; min-height: 44px; width: 100%; }
+input[type=checkbox] { width: auto; min-height: 0; }
+.campo { display: block; margin-bottom: 12px; }
+.campo > span { display: block; font-size: .9rem; color: var(--tx2); margin-bottom: 4px; }
+.dias { display: flex; flex-wrap: wrap; gap: 6px; }
+.dias label { display: flex; align-items: center; gap: 4px; border: 1px solid var(--bd); border-radius: 10px; padding: 8px 10px; }
+dialog.modal { border: 0; border-radius: var(--r); padding: 18px; width: min(92vw, 460px); max-height: 90dvh; background: var(--card); color: var(--tx); }
+dialog.modal::backdrop { background: rgba(0, 0, 0, .45); }
+.acciones { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 8px; }
