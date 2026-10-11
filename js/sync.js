@@ -8,6 +8,7 @@
 import { SUPABASE_URL, SUPABASE_CLAVE } from './config.js';
 import * as db from './storage.js';
 import { pedir } from './utils/dom.js';
+import { t } from './i18n.js';
 
 export const eventos = new EventTarget(); // 'estado' (cambia la info de abajo) y 'datos' (llegaron cambios de la nube)
 export const info = {
@@ -119,10 +120,10 @@ async function prepararDispositivo() {
   if (count > 0 && locales > 0) {
     const r = await pedir({
       titulo: 'Datos en este dispositivo y en la nube',
-      ayuda: `Hay ${count} registros en tu cuenta y ${locales} en este dispositivo. Si combinas, se juntan (puede haber grupos o participantes repetidos que tendrás que borrar).`,
+      ayuda: t('Hay {n} registros en tu cuenta y {m} en este dispositivo. Si combinas, se juntan (puede haber grupos o participantes repetidos que tendrás que borrar).', { n: count, m: locales }),
       campos: [{ n: 'modo', et: '¿Qué quieres hacer?', tipo: 'select', opciones: [
-        { v: 'combinar', t: 'Combinar los dos' },
-        { v: 'nube', t: 'Usar solo los de la nube (se borran los de este dispositivo)' }] }],
+        { v: 'combinar', t: t('Combinar los dos') },
+        { v: 'nube', t: t('Usar solo los de la nube (se borran los de este dispositivo)') }] }],
       valores: { modo: 'combinar' }
     });
     if (!r) return false;
@@ -145,11 +146,11 @@ async function prepararDispositivo() {
 // ---------- Sesión ----------
 const traducir = e => {
   const m = e?.message || String(e);
-  if (/Invalid login/i.test(m)) return 'Correo o contraseña incorrectos.';
-  if (/already registered/i.test(m)) return 'Ese correo ya tiene cuenta. Pulsa «Entrar».';
-  if (/at least 6/i.test(m)) return 'La contraseña debe tener al menos 6 caracteres.';
-  if (/rate limit/i.test(m)) return 'Demasiados intentos. Espera un rato y vuelve a probar.';
-  if (/fetch|network/i.test(m)) return 'No hay conexión. Inténtalo cuando tengas internet.';
+  if (/Invalid login/i.test(m)) return t('Correo o contraseña incorrectos.');
+  if (/already registered/i.test(m)) return t('Ese correo ya tiene cuenta. Pulsa «Entrar».');
+  if (/at least 6/i.test(m)) return t('La contraseña debe tener al menos 6 caracteres.');
+  if (/rate limit/i.test(m)) return t('Demasiados intentos. Espera un rato y vuelve a probar.');
+  if (/fetch|network/i.test(m)) return t('No hay conexión. Inténtalo cuando tengas internet.');
   return m;
 };
 const fallar = e => { throw new Error(traducir(e)); };
@@ -161,12 +162,12 @@ export async function entrar(email, clave) {
 export async function registrar(email, clave) {
   const { data, error } = await cliente.auth.signUp({ email, password: clave });
   if (error) fallar(error);
-  if (!data.session) throw new Error('Cuenta creada. Revisa tu correo para confirmarla y luego pulsa «Entrar».');
+  if (!data.session) throw new Error(t('Cuenta creada. Revisa tu correo para confirmarla y luego pulsa «Entrar».'));
 }
 export async function recuperar(email) {
   const { error } = await cliente.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
   if (error) fallar(error);
-  return 'Te hemos enviado un correo para cambiar la contraseña.';
+  return t('Te hemos enviado un correo para cambiar la contraseña.');
 }
 export async function salir(borrarDatosLocales) {
   await cliente.auth.signOut();
@@ -181,7 +182,7 @@ async function nuevaClave() {
   const r = await pedir({ titulo: 'Nueva contraseña', campos: [{ n: 'clave', et: 'Nueva contraseña (mínimo 6 caracteres)', tipo: 'password', req: true }] });
   if (!r) return;
   const { error } = await cliente.auth.updateUser({ password: r.clave });
-  alert(error ? traducir(error) : 'Contraseña cambiada.');
+  alert(error ? traducir(error) : t('Contraseña cambiada.'));
 }
 
 function detener() { if (canal) { cliente.removeChannel(canal); canal = null; } }

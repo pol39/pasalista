@@ -1,5 +1,5 @@
 // Ayudas para crear HTML sin plantillas de texto (así no hay problemas con comillas ni nombres raros).
-import { t } from '../i18n.js';
+import { t, diasCortos } from '../i18n.js';
 import { edad } from './dates.js';
 import { matizEdad } from './orden.js';
 
@@ -16,7 +16,7 @@ export const h = (etiqueta, attrs = {}, ...hijos) => {
   return e;
 };
 
-const DIAS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do']; // 1 = lunes … 7 = domingo
+// Los días se numeran 1 = lunes … 7 = domingo (nombres cortos en i18n.js).
 
 // Ventana con formulario. Devuelve un objeto con los valores, o null si se cancela.
 // campos: [{ n: nombre, et: etiqueta, tipo: text|number|date|month|textarea|select|dias|check, req, ph, opciones, cambia }]
@@ -37,6 +37,7 @@ export function pedir({ titulo, campos, valores = {}, acciones = [], ayuda }) {
         el.checked = !!valores[c.n];
         leer[c.n] = () => el.checked;
       } else if (c.tipo === 'dias') {
+        const DIAS = diasCortos();
         const cajas = DIAS.map((_, k) => h('input', { type: 'checkbox', value: k + 1 }));
         el = h('div', { class: 'dias' }, ...cajas.map((cb, k) => h('label', {}, cb, DIAS[k])));
         poner[c.n] = v => cajas.forEach(cb => { cb.checked = v.includes(+cb.value); });
@@ -45,7 +46,7 @@ export function pedir({ titulo, campos, valores = {}, acciones = [], ayuda }) {
       } else {
         const area = c.tipo === 'textarea';
         el = h(area ? 'textarea' : 'input', {
-          type: area ? null : c.tipo || 'text', required: !!c.req, placeholder: c.ph,
+          type: area ? null : c.tipo || 'text', required: !!c.req, placeholder: t(c.ph),
           pattern: c.req && !area ? '.*\\S.*' : null // impide nombres vacíos con solo espacios
         });
         el.value = valores[c.n] ?? '';
@@ -85,4 +86,19 @@ export function burbujas(contenedor) {
   });
   contenedor.append(...bs);
   setTimeout(() => bs.forEach(b => b.remove()), 2000);
+}
+
+// Círculo con la foto del participante (o sus iniciales, con el color de su edad).
+export function avatar(p, foto, tam = 44) {
+  const matiz = matizEdad(p.anyNacimiento) ?? 200;
+  const iniciales = p.nombre.trim().split(/\s+/).slice(0, 2).map(x => x[0]?.toUpperCase() || '').join('');
+  return h('span', { class: 'avatar', style: `--h:${matiz};--tam:${tam}px` }, foto ? h('img', { src: foto, alt: '' }) : iniciales);
+}
+
+// Anillo de porcentaje que se rellena con una animación suave. nv: ok | mid | bad | na
+export function anillo(valor, tam = 96, nv = 'na') {
+  const a = h('div', { class: `anillo nv-${nv}`, style: `--tam:${tam}px` }, h('span', {}, valor == null ? '—' : valor + '%'));
+  const frame = globalThis.requestAnimationFrame || (f => setTimeout(f, 16));
+  frame(() => frame(() => a.style.setProperty('--p', valor ?? 0))); // dos fotogramas: así se ve el relleno animado
+  return a;
 }

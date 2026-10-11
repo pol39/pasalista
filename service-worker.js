@@ -1,13 +1,13 @@
 // Service worker: guarda los archivos de la app para que funcione sin conexión.
 // Estrategia: primero red (así ves los cambios al actualizar) y, si no hay red, la copia guardada.
 // Si añades un archivo nuevo, apúntalo en ARCHIVOS y sube el número de VERSION.
-const VERSION = 'pasalista-v4';
+const VERSION = 'pasalista-v5';
 const ARCHIVOS = [
   './', 'index.html', 'manifest.json', 'icons/icon.svg',
   'css/base.css', 'css/layout.css', 'css/components.css',
-  'js/app.js', 'js/asistencia.js', 'js/config.js', 'js/sync.js', 'js/vendor/supabase.js', 'js/router.js', 'js/storage.js', 'js/state.js', 'js/i18n.js', 'js/theme.js',
-  'js/utils/dates.js', 'js/utils/dom.js', 'js/utils/orden.js', 'js/logic/periods.js', 'js/logic/sessions.js',
-  'js/views/hoy.js', 'js/views/calendario.js', 'js/views/especiales.js', 'js/views/mas.js',
+  'js/app.js', 'js/asistencia.js', 'js/config.js', 'js/sync.js', 'js/vendor/supabase.js', 'js/router.js', 'js/storage.js', 'js/state.js', 'js/i18n.js', 'js/textos.js', 'js/theme.js',
+  'js/utils/dates.js', 'js/utils/dom.js', 'js/utils/orden.js', 'js/utils/foto.js', 'js/logic/periods.js', 'js/logic/sessions.js', 'js/logic/stats.js',
+  'js/views/hoy.js', 'js/views/calendario.js', 'js/views/ficha.js', 'js/views/especiales.js', 'js/views/mas.js',
   'js/views/participantes.js', 'js/views/grupos.js',
   'js/views/temporadas.js', 'js/views/ajustes.js'
 ];

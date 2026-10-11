@@ -9,6 +9,8 @@
 import { estaActivo, grupoEn, nuevoParticipante, darDeBaja, reactivar, cambiarGrupo, diasGrupo } from '../js/logic/periods.js';
 import { especialEn, listaDelDia, estadoDia, porcentaje } from '../js/logic/sessions.js';
 import { porEdadYNombre } from '../js/utils/orden.js';
+import { registrosDe, conteo, previstos, rachas, estadisticasTemporada } from '../js/logic/stats.js';
+import { TEXTOS } from '../js/textos.js';
 const ul = document.getElementById('r');
 const prueba = (nombre, f) => {
   let ok = false, msg = '';
@@ -78,4 +80,35 @@ prueba('Orden: primero por edad (menor a mayor), luego alfabético; sin año de 
              { id: 'c', nombre: 'Ada', anyNacimiento: 2018 }, { id: 'd', nombre: 'Aaron', anyNacimiento: null }];
   return l.sort(porEdadYNombre).map(x => x.id).join() === 'c,a,b,d';
 });
+
+// ---- Estadísticas: solo cuentan los días de entreno ya realizados con la lista pasada ----
+const HOY = '2026-01-01';
+const q1 = nuevoParticipante({ id: 'q1', nombre: 'Marta', grupoId: 'A', mes: '2025-10' });
+const q2 = nuevoParticipante({ id: 'q2', nombre: 'Leo', grupoId: 'A', mes: '2025-10' });
+const marca = (pid, fecha, estado, extra = {}) => ({ id: `${pid}|${fecha}`, participanteId: pid, fecha, estado, justificada: false, retraso: false, comentario: '', ...extra });
+const festivoJueves = [{ fecha: '2025-11-06', grupoId: null, tipo: 'Festivo' }];
+
+prueba('Estadística: un día futuro marcado y un día no lectivo NO cuentan', () => {
+  const suyas = [marca('q1', '2025-11-04', 'presente'), marca('q1', '2025-11-06', 'ausente'), marca('q1', '2099-01-01', 'presente')];
+  return registrosDe(q1, suyas, festivoJueves, HOY).length === 1;
+});
+prueba('Días previstos: nov 2025 tiene 11 entrenos (martes, jueves y viernes) quitando el festivo del jueves 6', () =>
+  previstos(q1, '2025-11-01', '2025-11-30', grupos, festivoJueves, '2025-11-30').length === 11);
+prueba('Conteo: justificado EXCLUYE (2 de 3 = 67 %) o CUENTA (3 de 4 = 75 %); retrasos y justificadas aparte', () => {
+  const r = [marca('q1', '2025-11-04', 'presente'), marca('q1', '2025-11-07', 'presente', { retraso: true }), marca('q1', '2025-11-11', 'ausente'), marca('q1', '2025-11-13', 'ausente', { justificada: true })];
+  const a = conteo(r, 'excluye'), b = conteo(r, 'cuenta');
+  return a.pct === 67 && a.computables === 3 && a.retrasos === 1 && a.justificadas === 1 && b.pct === 75 && b.computables === 4;
+});
+prueba('Temporada: % de cada mes y general, solo con días ya realizados', () => {
+  const temp = { inicio: '2025-10-01', fin: '2026-06-30' };
+  const as = [marca('q1', '2025-10-07', 'presente'), marca('q1', '2025-11-04', 'ausente'), marca('q2', '2025-11-04', 'presente'), marca('q2', '2099-01-01', 'presente')];
+  const e = estadisticasTemporada(temp, [q1, q2], grupos, as, [], 'excluye', HOY);
+  return e.meses.length === 9 && e.meses[0].conteo.pct === 100 && e.meses[1].conteo.pct === 50 && e.total.pct === 67 && e.meses[1].porGrupo[0].grupoId === 'A';
+});
+prueba('Rachas: 3 presencias seguidas / 2 faltas seguidas', () => {
+  const P = { estado: 'presente' }, A = { estado: 'ausente' };
+  return rachas([P, P, A, P, P, P]).presencias === 3 && rachas([P, A, A]).faltas === 2;
+});
+prueba('Idiomas: todas las traducciones existen y tienen las mismas variables {x}', () =>
+  Object.entries(TEXTOS).every(([k, [ca, en]]) => ca && en && [ca, en].every(s => (s.match(/\{\w+\}/g) || []).sort().join() === (k.match(/\{\w+\}/g) || []).sort().join())));
 </script>

@@ -16,7 +16,7 @@ export async function crearEspeciales(grupos, valores = {}) {
     campos: [
       { n: 'desde', et: 'Desde', tipo: 'date', req: true },
       { n: 'hasta', et: 'Hasta (opcional)', tipo: 'date' },
-      { n: 'tipo', et: 'Motivo', tipo: 'select', opciones: TIPOS.map(x => ({ v: x, t: x })), cambia: (v, poner) => { if (v === 'Festivo') poner.grupoId(''); } },
+      { n: 'tipo', et: 'Motivo', tipo: 'select', opciones: TIPOS.map(x => ({ v: x, t: t(x) })), cambia: (v, poner) => { if (v === 'Festivo') poner.grupoId(''); } },
       { n: 'motivo', et: 'Detalle (opcional)', ph: 'Navidad' },
       { n: 'grupoId', et: 'Afecta a', tipo: 'select', opciones: [{ v: '', t: 'Todos los grupos' }, ...grupos.map(g => ({ v: g.id, t: g.nombre }))] }
     ],
@@ -59,7 +59,7 @@ export async function vista(main) {
       ...(bloques.length ? bloques.map(b => h('div', { class: 'card fila' },
         h('div', { class: 'grow' },
           h('strong', {}, fechaCorta(b.desde) + (b.hasta !== b.desde ? ' – ' + fechaCorta(b.hasta) : '')),
-          h('div', {}, b.e.tipo + (b.e.motivo ? ': ' + b.e.motivo : '')),
+          h('div', {}, t(b.e.tipo) + (b.e.motivo ? ': ' + b.e.motivo : '')),
           h('div', { class: 'sec' }, afectaATodos(b.e) ? t('Todos los grupos') : (grupos.find(g => g.id === b.e.grupoId)?.nombre ?? '—'))),
         h('button', { class: 'btn', onclick: () => deshacer(b) }, '↩ ' + t('Deshacer'))))
         : [h('p', { class: 'vacio' }, t('No hay días especiales. Añade un festivo o un bloque de fechas.'))]));

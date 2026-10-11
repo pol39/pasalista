@@ -1,20 +1,29 @@
-// Ajustes: tema, cuenta y sincronización, privacidad.
-// (En la Fase 3 se añadirán umbrales, "Justificado", copia de seguridad y borrado de datos.)
+// Ajustes: idioma, tema, ausencias justificadas, cuenta y sincronización, privacidad.
+// (En la Fase 3 se añadirán umbrales de color, copia de seguridad y borrado de datos.)
 import { h } from '../utils/dom.js';
+import { leer, guardar } from '../storage.js';
 import { aplicarTema, temaGuardado } from '../theme.js';
 import { info, eventos, entrar, registrar, recuperar, salir, sincronizar } from '../sync.js';
-import { t } from '../i18n.js';
+import { t, idioma, setIdioma, IDIOMAS } from '../i18n.js';
 
 export async function vista(main) {
+  const justificado = (await leer('ajustes', 'justificado'))?.valor || 'excluye';
   const opciones = [['sistema', 'Según el sistema'], ['claro', 'Claro'], ['oscuro', 'Oscuro']];
-  const tema = h('div', { class: 'card' },
+  const general = h('div', { class: 'card' },
+    h('label', { class: 'campo' }, h('span', {}, t('Idioma')),
+      h('select', { onchange: e => setIdioma(e.target.value) },
+        ...Object.entries(IDIOMAS).map(([v, x]) => h('option', { value: v, selected: idioma() === v }, x)))),
     h('label', { class: 'campo' }, h('span', {}, t('Tema')),
       h('select', { onchange: e => aplicarTema(e.target.value) },
-        ...opciones.map(([v, x]) => h('option', { value: v, selected: temaGuardado() === v }, t(x))))));
+        ...opciones.map(([v, x]) => h('option', { value: v, selected: temaGuardado() === v }, t(x))))),
+    h('label', { class: 'campo' }, h('span', {}, t('Ausencias justificadas')),
+      h('select', { onchange: e => guardar('ajustes', { clave: 'justificado', valor: e.target.value }) },
+        h('option', { value: 'excluye', selected: justificado === 'excluye' }, t('No cuentan (se sacan del cálculo)')),
+        h('option', { value: 'cuenta', selected: justificado === 'cuenta' }, t('Cuentan como asistencia')))));
   const cuenta = h('div', { class: 'card' }), privacidad = h('div', { class: 'card' });
 
   const estadoTexto = () => {
-    const hora = info.ultima ? info.ultima.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '';
+    const hora = info.ultima ? info.ultima.toLocaleTimeString(idioma(), { hour: '2-digit', minute: '2-digit' }) : '';
     const base = { sincronizando: t('Sincronizando…'), ok: `${t('Sincronizado')} ✓ ${hora}`, 'sin-conexion': t('Sin conexión: los cambios se subirán al volver.'), error: `${t('Error')}: ${info.error}`, local: '' }[info.fase];
     return base + (info.pendientes ? ` · ${info.pendientes} ${t('cambios pendientes')}` : '');
   };
@@ -57,11 +66,12 @@ export async function vista(main) {
       h('p', {}, info.usuario
         ? t('Tus datos se guardan en este dispositivo y en tu cuenta (servidor de Supabase en la UE) para que los veas en tus otros dispositivos. No se usan analíticas ni publicidad.')
         : t('Sin iniciar sesión, todo se guarda solo en este dispositivo y no se envía a ningún servidor.')),
-      h('p', { class: 'sec' }, t('Consejo: guarda solo el nombre y la inicial del apellido de los menores, y pide el consentimiento de las familias (RGPD).')));
+      h('p', { class: 'sec' }, t('Consejo: guarda solo el nombre y la inicial del apellido de los menores, y pide el consentimiento de las familias (RGPD).')),
+      h('p', { class: 'sec' }, t('Las fotos se reducen y se guardan igual que el resto de datos. Pide el consentimiento de la familia antes de poner la foto de un menor.')));
   };
   const alEstado = () => { if (!cuenta.isConnected) return eventos.removeEventListener('estado', alEstado); pintar(); };
   eventos.addEventListener('estado', alEstado);
   pintar();
 
-  main.replaceChildren(h('h2', { style: 'margin-bottom:14px' }, t('Ajustes')), tema, cuenta, privacidad);
+  main.replaceChildren(h('h2', { style: 'margin-bottom:14px' }, t('Ajustes')), general, cuenta, privacidad);
 }

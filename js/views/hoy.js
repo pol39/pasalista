@@ -1,7 +1,7 @@
 // Pantalla "Pasar lista": un toque por persona. Lo secundario queda tras el botón ⋯.
 import { todos, guardar, borrar } from '../storage.js';
 import { estado } from '../state.js';
-import { h, pedir, chipEdad, burbujas } from '../utils/dom.js';
+import { h, pedir, chipEdad, burbujas, avatar } from '../utils/dom.js';
 import { porEdadYNombre } from '../utils/orden.js';
 import { sumarDias, hoyFecha, fechaLarga, mesDeFecha, diaSemana } from '../utils/dates.js';
 import { estaActivo, grupoEn, diasGrupo } from '../logic/periods.js';
@@ -14,8 +14,9 @@ export async function vista(main) {
   let tm, tc, ultimo = null; // temporizadores (aviso "Guardado" y comentario) y última persona marcada (para animarla)
 
   const abrir = async () => {
-    const [grupos, parts, especiales, sesiones, asist] =
-      await Promise.all(['grupos', 'participantes', 'diasEspeciales', 'sesiones', 'asistencias'].map(c => todos(c)));
+    const [grupos, parts, especiales, sesiones, asist, fotosLista] =
+      await Promise.all(['grupos', 'participantes', 'diasEspeciales', 'sesiones', 'asistencias', 'fotos'].map(c => todos(c)));
+    const fotos = new Map(fotosLista.map(f => [f.id, f.datos]));
     grupos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
     if (!grupos.length) return main.replaceChildren(h('h2', {}, t('Pasar lista')), h('p', { class: 'vacio' }, t('Primero crea un grupo y añade participantes.')));
     if (!grupos.some(g => g.id === estado.grupoId)) estado.grupoId = grupos[0].id;
@@ -24,6 +25,7 @@ export async function vista(main) {
       || { id: `${fecha}|${grupo.id}`, fecha, grupoId: grupo.id, comentario: '', extras: [] };
     const reg = new Map(asist.filter(a => a.fecha === fecha).map(a => [a.id, a]));
     const clave = p => `${p.id}|${fecha}`;
+    const cumple = p => !!p.nacimiento && p.nacimiento.slice(5) === fecha.slice(5); // ¿hoy es su cumpleaños?
     const especial = especialEn(fecha, grupo.id, especiales);
     const calc = () => listaDelDia(fecha, grupo, parts, grupos, sesion);
 
@@ -44,7 +46,7 @@ export async function vista(main) {
     if (especial) {
       return main.replaceChildren(...cabecera, h('div', { class: 'card banner' },
         h('strong', {}, '🚫 ' + t('Día no lectivo')),
-        h('div', {}, especial.tipo + (especial.motivo ? ': ' + especial.motivo : '')),
+        h('div', {}, t(especial.tipo) + (especial.motivo ? ': ' + especial.motivo : '')),
         h('div', { class: 'sec' }, afectaATodos(especial) ? t('Todos los grupos') : grupo.nombre),
         h('p', { class: 'sec' }, t('No cuenta en ningún porcentaje.')),
         h('button', { class: 'btn', onclick: async () => {
@@ -87,7 +89,8 @@ export async function vista(main) {
       const notas = [r?.comentario ? '💬' : '', r?.justificada ? t('Justificada') : '', r?.retraso ? '⏱ ' + t('Retraso') : ''].filter(Boolean).join(' · ');
       return h('div', { class: 'card asis' + (est ? ' s-' + est : '') + (ultimo === p.id ? ' pop' : '') },
         h('div', { class: 'fila' },
-          h('div', { class: 'grow' }, chipEdad(p.anyNacimiento), ' ', h('strong', {}, p.nombre), ' ', sesion.extras.includes(p.id) ? h('span', { class: 'chip' }, t('Extra')) : null,
+          avatar(p, fotos.get(p.id), 40),
+          h('div', { class: 'grow' }, chipEdad(p.anyNacimiento), ' ', h('strong', {}, p.nombre), ' ', cumple(p) ? h('span', { class: 'chip', title: t('Cumpleaños') }, '🎂') : null, sesion.extras.includes(p.id) ? h('span', { class: 'chip' }, t('Extra')) : null,
             notas ? h('div', { class: 'sec' }, notas) : null),
           h('button', { class: 'btn mini', 'aria-label': t('Más opciones'), onclick: () => opciones(p) }, '⋯')),
         h('div', { class: 'dos' },
@@ -97,13 +100,15 @@ export async function vista(main) {
     // El contador se crea una vez y solo se actualiza (así la barra se mueve con suavidad).
     const texto = h('strong', { class: 'grow' }), relleno = h('div'), fin = h('div', { class: 'fin' });
     const contador = h('div', { class: 'contador' }, h('div', { class: 'fila' }, texto, ind), h('div', { class: 'barra' }, relleno), fin);
-    const listaEl = h('div', {});
+    const listaEl = h('div', {}), cumples = h('div', {});
     let completa; // ¿estaba ya completa la lista? (las burbujas salen solo al completarla)
     const pintar = () => {
       const l = calc();
+      const festejan = l.filter(cumple);
+      cumples.replaceChildren(...(festejan.length ? [h('div', { class: 'card banner cumple' }, '🎂 ' + t('Hoy es el cumpleaños de {nombres}', { nombres: festejan.map(p => p.nombre).join(', ') }))] : []));
       const marcados = l.filter(p => reg.get(clave(p))?.estado);
       const pres = marcados.filter(p => reg.get(clave(p)).estado === 'presente').length;
-      texto.textContent = `${marcados.length} ${t('de')} ${l.length} ${t('marcados')} · ${pres} ${t('presentes')} · ${marcados.length - pres} ${t('ausentes')}`;
+      texto.textContent = t('{m} de {n} marcados · {p} presentes · {a} ausentes', { m: marcados.length, n: l.length, p: pres, a: marcados.length - pres });
       relleno.style.width = `${l.length ? 100 * marcados.length / l.length : 0}%`;
       const lleno = l.length > 0 && marcados.length === l.length;
       relleno.classList.toggle('lleno', lleno);
@@ -138,6 +143,7 @@ export async function vista(main) {
     main.replaceChildren(...cabecera, contador,
       h('div', { class: 'fila acc' },
         h('button', { class: 'btn primario', onclick: todosPresentes }, '✓ ' + t('Marcar todos como presentes'))),
+      cumples,
       listaEl,
       h('div', { class: 'fila acc' },
         h('button', { class: 'btn', onclick: añadir }, '+ ' + t('Añadir a esta sesión')),

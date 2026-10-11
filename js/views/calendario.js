@@ -7,13 +7,13 @@ import { nombreMes, mesAnterior, mesSiguiente, diasDelMes, diaSemana, hoyFecha }
 import { estaActivo, grupoEn, diasGrupo } from '../logic/periods.js';
 import { especialEn, estadoDia, listaDelDia, porcentaje } from '../logic/sessions.js';
 import { ponerAsistencia } from '../asistencia.js';
-import { t } from '../i18n.js';
+import { t, diasLetras } from '../i18n.js';
 
-const LETRAS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const siguiente = e => (!e ? 'presente' : e === 'presente' ? 'ausente' : null); // vacío → ✓ → ✗ → vacío
 
 export async function vista(main) {
   const pintar = async () => {
+    const LETRAS = diasLetras();
     const [parts, grupos, especiales, sesiones, asist] =
       await Promise.all(['participantes', 'grupos', 'diasEspeciales', 'sesiones', 'asistencias'].map(c => todos(c)));
     grupos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
@@ -33,7 +33,7 @@ export async function vista(main) {
       ...dias.map(f => {
         const e = estadoDia(f, grupo, ctx), esp = especialEn(f, grupo.id, especiales);
         return h('button', {
-          class: 'dia ' + e.tipo, title: esp ? esp.tipo + (esp.motivo ? ': ' + esp.motivo : '') : null,
+          class: 'dia ' + e.tipo, title: esp ? t(esp.tipo) + (esp.motivo ? ': ' + esp.motivo : '') : null,
           onclick: () => { estado.fecha = f; estado.grupoId = grupo.id; location.hash = '#/hoy'; }
         }, String(+f.slice(8)), f === hoyFecha() ? h('i', { class: 'hoy' }) : null);
       }));

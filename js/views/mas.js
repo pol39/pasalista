@@ -10,5 +10,5 @@ export async function vista(main) {
     h('h2', { style: 'margin-bottom:14px' }, t('Más')),
     enlace('#/especiales', '🚫', 'Días especiales', 'Festivos, temporal, huelgas y bloques de fechas'),
     enlace('#/temporadas', '📅', 'Temporadas', 'Crear, cambiar y consultar temporadas'),
-    enlace('#/ajustes', '⚙️', 'Ajustes', 'Tema, privacidad y datos'));
+    enlace('#/ajustes', '⚙️', 'Ajustes', 'Idioma, tema, cuenta y privacidad'));
 }

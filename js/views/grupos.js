@@ -3,9 +3,8 @@ import { todos, guardar, borrar, nuevoId } from '../storage.js';
 import { h, pedir } from '../utils/dom.js';
 import { estado } from '../state.js';
 import { diasGrupo } from '../logic/periods.js';
-import { t } from '../i18n.js';
+import { t, diasCortos } from '../i18n.js';
 
-const NOMBRES_DIA = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
 const CAMPOS = [
   { n: 'nombre', et: 'Nombre', req: true, ph: 'Benjamines' },
   { n: 'dias', et: 'Días de entrenamiento', tipo: 'dias' },
@@ -44,7 +43,7 @@ export async function vista(main) {
       h('div', { class: 'cab' }, h('h2', {}, t('Grupos')), h('button', { class: 'btn primario', onclick: () => editar() }, '+ ' + t('Nuevo'))),
       ...(lista.length ? lista.map(g => h('div', { class: 'card fila' },
         h('div', { class: 'grow' }, h('strong', {}, g.nombre),
-          h('div', { class: 'sec' }, [g.dias.map(d => NOMBRES_DIA[d - 1]).join(' '), g.horario].filter(Boolean).join(' · '))),
+          h('div', { class: 'sec' }, [g.dias.map(d => diasCortos()[d - 1]).join(' '), g.horario].filter(Boolean).join(' · '))),
         h('button', { class: 'btn', 'aria-label': t('Editar'), onclick: () => editar(g) }, '✏️')))
         : [h('p', { class: 'vacio' }, t('Aún no hay grupos. Crea el primero con «Nuevo».'))]));
   };

@@ -4,12 +4,12 @@
 // Si hay sesión iniciada, sync.js sube los cambios a la nube (ver js/sync.js).
 const CAJONES = {
   temporadas: 'id', grupos: 'id', participantes: 'id',
-  asistencias: 'id', diasEspeciales: 'id', sesiones: 'id', ajustes: 'clave',
+  asistencias: 'id', diasEspeciales: 'id', sesiones: 'id', ajustes: 'clave', fotos: 'id',
   cola: 'id' // cambios pendientes de subir a la nube (solo local)
 };
 
 // Cajones que se sincronizan. Los ajustes cuya clave empieza por "_" son solo de este dispositivo.
-export const SINCRONIZADOS = ['temporadas', 'grupos', 'participantes', 'asistencias', 'diasEspeciales', 'sesiones', 'ajustes'];
+export const SINCRONIZADOS = ['temporadas', 'grupos', 'participantes', 'asistencias', 'diasEspeciales', 'sesiones', 'ajustes', 'fotos'];
 export const claveDe = (cajon, objeto) => objeto[CAJONES[cajon]];
 
 // sync.js se engancha aquí para enterarse de cada cambio hecho en este dispositivo.
@@ -20,7 +20,7 @@ const avisar = (cajon, clave, borrado) => {
 
 let conexion;
 const abrir = () => conexion ??= new Promise((ok, ko) => {
-  const rq = indexedDB.open(globalThis.PASALISTA_DB || 'pasalista', 2);
+  const rq = indexedDB.open(globalThis.PASALISTA_DB || 'pasalista', 3);
   rq.onupgradeneeded = () => {
     for (const [nombre, clave] of Object.entries(CAJONES)) {
       if (!rq.result.objectStoreNames.contains(nombre)) rq.result.createObjectStore(nombre, { keyPath: clave });
