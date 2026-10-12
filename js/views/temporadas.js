@@ -3,7 +3,7 @@
 import { todos, leer, guardar, borrar, nuevoId } from '../storage.js';
 import { estado, fijarTemporada } from '../state.js';
 import { h, pedir, anillo } from '../utils/dom.js';
-import { nombreMes } from '../utils/dates.js';
+import { nombreMes, hoyMes } from '../utils/dates.js';
 import { estadisticasTemporada, nivel } from '../logic/stats.js';
 import { t } from '../i18n.js';
 
@@ -48,6 +48,7 @@ export async function vista(main) {
     const tarjeta = s => {
       const est = estadisticasTemporada(s, parts, grupos, asist, especiales, modo);
       const tot = est.total;
+      const mesesVistos = est.meses.filter(m => m.mes <= hoyMes()).reverse(); // del mes más reciente al más antiguo; los futuros no tienen datos
       return h('div', { class: 'card' },
         h('div', { class: 'fila' },
           h('div', { class: 'grow' }, h('strong', {}, s.nombre), h('div', { class: 'sec' }, `${fecha(s.inicio)} – ${fecha(s.fin)}`)),
@@ -60,7 +61,7 @@ export async function vista(main) {
             h('div', { class: 'sec' }, t('{p} presencias de {n} sesiones contadas', { p: tot.presentes + (modo === 'cuenta' ? tot.justificadas : 0), n: tot.computables })))),
         h('details', { open: s.id === estado.temporadaId },
           h('summary', {}, t('Porcentaje por meses')),
-          ...est.meses.map(filaMes),
+          ...(mesesVistos.length ? mesesVistos.map(filaMes) : [h('p', { class: 'sec' }, t('Todavía no hay meses con días realizados.'))]),
           h('p', { class: 'sec' }, t('Solo cuentan los días de entreno ya realizados con la lista pasada. Porcentaje = presencias / sesiones contadas (todos los participantes juntos).'))));
     };
 

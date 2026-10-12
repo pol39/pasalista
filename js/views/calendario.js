@@ -6,6 +6,7 @@ import { porEdadYNombre } from '../utils/orden.js';
 import { nombreMes, mesAnterior, mesSiguiente, diasDelMes, diaSemana, hoyFecha } from '../utils/dates.js';
 import { estaActivo, grupoEn, diasGrupo } from '../logic/periods.js';
 import { especialEn, estadoDia, listaDelDia, porcentaje } from '../logic/sessions.js';
+import { nivel } from '../logic/stats.js';
 import { ponerAsistencia } from '../asistencia.js';
 import { t, diasLetras } from '../i18n.js';
 
@@ -58,15 +59,16 @@ export async function vista(main) {
       const r = reg.get(`${p.id}|${f}`), est = r?.estado;
       return h('td', {}, h('button', { class: 'celda ' + (est || ''), 'aria-label': `${p.nombre} ${f}`, onclick: () => clic(p, f) }, est === 'presente' ? '✓' : est === 'ausente' ? '✗' : ''));
     };
-    const pct = p => {
-      const v = porcentaje(cols.filter(f => !noLectivo.has(f) && quien.get(f).has(p.id)).map(f => reg.get(`${p.id}|${f}`)), justificado);
-      return v == null ? '—' : v + '%';
-    };
+    const valor = p => porcentaje(cols.filter(f => !noLectivo.has(f) && quien.get(f).has(p.id)).map(f => reg.get(`${p.id}|${f}`)), justificado);
+    // El % va justo después del nombre: así se ve sin deslizar la tabla (importante en el móvil).
     const tabla = () => h('table', {},
-      h('thead', {}, h('tr', {}, h('th', {}, t('Participante')),
-        ...cols.map(f => h('th', { class: noLectivo.has(f) ? 'nl' : '' }, h('div', {}, LETRAS[diaSemana(f) - 1]), h('div', {}, String(+f.slice(8))), noLectivo.has(f) ? '🚫' : null)),
-        h('th', {}, '%'))),
-      h('tbody', {}, ...filas.map(p => h('tr', {}, h('td', {}, chipEdad(p.anyNacimiento), ' ', p.nombre), ...cols.map(f => celda(p, f)), h('td', { class: 'pct' }, pct(p))))));
+      h('thead', {}, h('tr', {}, h('th', {}, t('Participante')), h('th', {}, '%'),
+        ...cols.map(f => h('th', { class: noLectivo.has(f) ? 'nl' : '' }, h('div', {}, LETRAS[diaSemana(f) - 1]), h('div', {}, String(+f.slice(8))), noLectivo.has(f) ? '🚫' : null)))),
+      h('tbody', {}, ...filas.map(p => {
+        const v = valor(p);
+        return h('tr', {}, h('td', {}, h('div', { class: 'nom' }, chipEdad(p.anyNacimiento), ' ', p.nombre)),
+          h('td', { class: 'pct t-' + nivel(v) }, v == null ? '—' : v + '%'), ...cols.map(f => celda(p, f)));
+      })));
     const wrap = h('div', { class: 'tabla-wrap' }, filas.length && cols.length ? tabla() : h('p', { class: 'vacio' }, t('No hay participantes o días de entreno este mes.')));
 
     main.replaceChildren(

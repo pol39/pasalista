@@ -53,8 +53,7 @@ textarea { min-height: 70px; }
 .sinentreno { opacity: .45; background: transparent; }
 .leyenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem; margin-bottom: 16px; }
 .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--bd); margin-right: 4px; vertical-align: -2px; }
-.tabla-wrap, .solo-tabla { display: none; }
-.tabla-wrap { overflow-x: auto; }
+.tabla-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { border-collapse: collapse; font-size: .9rem; }
 th, td { padding: 4px 6px; border: 1px solid var(--bd); text-align: center; }
 th:first-child, td:first-child { position: sticky; left: 0; background: var(--card); text-align: left; white-space: nowrap; }
@@ -64,7 +63,6 @@ td.na { color: var(--tx2); }
 .celda.presente { background: var(--ok); color: #fff; }
 .celda.ausente { background: var(--ko); color: #fff; }
 .pct { font-weight: 700; }
-@media (min-width: 900px) { .tabla-wrap, .solo-tabla { display: block; } }
 
 /* ================= Estilo v2: más color y movimiento con sentido ================= */
 :root { --ease: cubic-bezier(.2, .8, .3, 1); }
@@ -208,3 +206,11 @@ details > summary { cursor: pointer; font-weight: 600; margin: 10px 0; }
 .dia-fila.presente .marca { color: var(--ok); } .dia-fila.ausente .marca { color: var(--ko); } .dia-fila.pend .marca { color: var(--tx2); }
 .cumple { background: var(--acc-soft); }
 @media (max-width: 520px) { .mes-fila { grid-template-columns: 6em 1fr auto; } .chips-g { margin-left: 6.5em; } }
+
+/* ---- Tabla mensual también en el móvil: se desliza hacia los lados y el nombre y el % se quedan fijos ---- */
+th:first-child, td:first-child { width: 8em; min-width: 8em; max-width: 8em; z-index: 1; }
+.nom { max-width: calc(8em - 12px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+th:nth-child(2), td:nth-child(2) { position: sticky; left: 8em; background: var(--card); z-index: 1; box-shadow: 2px 0 4px rgba(0, 0, 0, .08); }
+td.pct { min-width: 3.4em; }
+.t-ok { color: var(--ok); } .t-mid { color: #c98f00; } .t-bad { color: var(--ko); } .t-na { color: var(--tx2); }
+@media (max-width: 520px) { .tabla-wrap td:first-child .edad { display: none; } th, td { padding: 4px; } .celda { width: 32px; } }

@@ -76,7 +76,7 @@ export async function vista(main, id) {
     // ---- Por meses ----
     const meses = porMes(regs), pendMes = new Map();
     for (const f of pend) pendMes.set(mesDeFecha(f), (pendMes.get(mesDeFecha(f)) || 0) + 1);
-    const listaMeses = [...new Set([...meses.keys(), ...pendMes.keys()])].sort();
+    const listaMeses = [...new Set([...meses.keys(), ...pendMes.keys()])].sort().reverse(); // del mes más reciente al más antiguo
     const bloqueMeses = ver.periodo !== 'mes' && listaMeses.length ? h('div', { class: 'card' }, h('h3', {}, t('Por meses')),
       ...listaMeses.map(m => {
         const cm = conteo(meses.get(m) || [], modo);

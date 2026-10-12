@@ -186,6 +186,7 @@ export const TEXTOS = {
   "Nueva temporada": ["Nova temporada", "New season"],
   "Inicio": ["Inici", "Start"],
   "Fin": ["Fi", "End"],
+  "Todavía no hay meses con días realizados.": ["Encara no hi ha mesos amb dies realitzats.", "No months with completed days yet."],
   "General de la temporada": ["General de la temporada", "Season overall"],
   "{p} presencias de {n} sesiones contadas": ["{p} presències de {n} sessions comptades", "{p} attendances out of {n} sessions counted"],
   "Porcentaje por meses": ["Percentatge per mesos", "Percentage by month"],

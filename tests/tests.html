@@ -75,10 +75,10 @@ prueba('Un festivo es festivo para TODOS los grupos, aunque se guardara con un g
   const f = [{ fecha: '2025-11-07', grupoId: 'A', tipo: 'Festivo' }];
   return !!especialEn('2025-11-07', 'A', f) && !!especialEn('2025-11-07', 'B', f);
 });
-prueba('Orden: primero por edad (menor a mayor), luego alfabético; sin año de nacimiento al final', () => {
+prueba('Orden: primero por edad de mayor a menor, luego alfabético; sin año de nacimiento al final', () => {
   const l = [{ id: 'a', nombre: 'Zoe', anyNacimiento: 2018 }, { id: 'b', nombre: 'Ana', anyNacimiento: 2016 },
              { id: 'c', nombre: 'Ada', anyNacimiento: 2018 }, { id: 'd', nombre: 'Aaron', anyNacimiento: null }];
-  return l.sort(porEdadYNombre).map(x => x.id).join() === 'c,a,b,d';
+  return l.sort(porEdadYNombre).map(x => x.id).join() === 'b,c,a,d';
 });
 
 // ---- Estadísticas: solo cuentan los días de entreno ya realizados con la lista pasada ----

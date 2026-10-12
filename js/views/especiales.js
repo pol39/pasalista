@@ -46,7 +46,7 @@ export async function vista(main) {
       if (u && clave(u.e) === clave(e) && sumarDias(u.hasta, 1) === e.fecha) { u.hasta = e.fecha; u.items.push(e); }
       else bloques.push({ e, desde: e.fecha, hasta: e.fecha, items: [e] });
     }
-    bloques.sort((a, b) => a.desde.localeCompare(b.desde));
+    bloques.sort((a, b) => b.desde.localeCompare(a.desde)); // lo más reciente arriba
 
     const deshacer = async b => {
       if (!confirm(t('¿Deshacer este día no lectivo? Volverá a contar en los porcentajes.'))) return;
